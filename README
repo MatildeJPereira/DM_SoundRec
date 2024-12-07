@@ -1,0 +1,13 @@
+Sound recommendation system.
+What exaclty am I doing with this:
+        I want to use librosa for the sound analysis part: https://librosa.org/doc/latest/index.html
+        There's some information on how to use it in a way that is useful to get the information I need for the mining part
+    itself
+        For the dataset I'm thinking of using FMA (Free Music Archive) as it's very complete, I'm still somewhat split
+    between using librosa to get my own features or using already made feature matrix, with FMA I can use both.
+        I wanted to start with clustering for different features (do not know wich ones yet)
+        Also wanted to use Apriori to find things in common between two tracks
+        With this I'm somewhat sure I can get an ok working song recommendation system.
+
+
+
