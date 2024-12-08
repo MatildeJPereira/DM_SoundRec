@@ -1,5 +1,5 @@
 import intro
-from controller import home, cluster, recommend
+from controller import home, cluster
 
 from flask import Flask
 
