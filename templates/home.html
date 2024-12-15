@@ -8,11 +8,9 @@
 <div class="container mt-5">
     <h1>Welcome</h1>
     <p>I believe you want songs recommended, here:</p>
-    <ul>
-        {% for one_rec in rec %}
-        <li><a href="{{ one_rec }}">{{ one_rec }}</a></li>
-        {% endfor %}
-    </ul>
+    {% for one_rec in rec_mp3 %}
+    <audio controls><source src="{{ one_rec }}" type="audio/mpeg"></audio>
+    {% endfor %}
 </div>
 </body>
 </html>

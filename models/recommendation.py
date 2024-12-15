@@ -6,8 +6,8 @@ class Recommendation:
 
     def recommend(self):
         data = self.data
-        find_cluster = data.loc[data['track_id'] == self.track_id, 'cluster'].values[0]
+        find_cluster = data.loc[data.index == self.track_id, 'cluster'].values[0]
         similar_tracks = data[data['cluster'] == find_cluster]
 
-        return similar_tracks.sample(n=self.n_rec)[['track_id']]
+        return similar_tracks.sample(n=self.n_rec)
 

@@ -10,16 +10,7 @@ import numpy as np
 class Clustering:
 
     def __init__(self, data, clustering_type, n_clusters):
-        # Separate the track_id from the features
-        ids = data['track_id']
-        features = data.drop(columns=['track_id'])
-
-        # Use standard scaler to normalize the features
-        scaler = StandardScaler()
-        scaled_data = scaler.fit_transform(features)
-
         self.data = data
-        self.scaled_data = scaled_data
         self.type = clustering_type
         self.n_clusters = n_clusters
 
@@ -43,12 +34,13 @@ class Clustering:
         :return: the original data with clustering
         """
         kmeans = KMeans(n_clusters=self.n_clusters, random_state=42)
-        self.data['cluster'] = kmeans.fit_predict(self.scaled_data)
+        self.data['cluster'] = kmeans.fit_predict(self.data)
         return self.data
 
     def __db_scan(self):
         """
         TODO implement my own dbscan
+        TODO is horrible for large datasets, will kill your commputer, DO NOT RUN (yet)
         This is the DBSCAN clustering algorithm
         :return: the data with clustering
         """
@@ -56,8 +48,8 @@ class Clustering:
         min_pts = self.scaled_data.shape[1]*2
 
         # Find a suitable eps
-        # self.find_eps(self.scaled_data, min_pts)
-        eps = 50
+        # self.__find_eps(self.scaled_data, min_pts)
+        eps = 30
 
         dbscan = DBSCAN(eps=eps, min_samples=min_pts)
         self.data['cluster'] = dbscan.fit_predict(self.scaled_data)
