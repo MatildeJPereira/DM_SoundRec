@@ -40,19 +40,19 @@ class Clustering:
     def __db_scan(self):
         """
         TODO implement my own dbscan
-        TODO is horrible for large datasets, will kill your commputer, DO NOT RUN (yet)
+        TODO change to fit the new changes
         This is the DBSCAN clustering algorithm
         :return: the data with clustering
         """
         # Find a stuitable min_pts
-        min_pts = self.scaled_data.shape[1]*2
+        min_pts = self.data.shape[1]*2
 
         # Find a suitable eps
-        # self.__find_eps(self.scaled_data, min_pts)
-        eps = 30
+        # self.__find_eps(self.data, min_pts)
+        eps = 2.2
 
         dbscan = DBSCAN(eps=eps, min_samples=min_pts)
-        self.data['cluster'] = dbscan.fit_predict(self.scaled_data)
+        self.data['cluster'] = dbscan.fit_predict(self.data)
         return self.data
 
     def __hierarchical(self):
@@ -68,8 +68,9 @@ class Clustering:
         This method creates a visual representation of the clustering.
         :return: the path to the plot created
         """
+        plt.clf()
         pca = PCA(n_components=2)
-        reduced_data = pca.fit_transform(self.scaled_data)
+        reduced_data = pca.fit_transform(self.data)
 
         plt.scatter(reduced_data[:, 0], reduced_data[:, 1], c=self.data['cluster'], cmap='viridis')
 

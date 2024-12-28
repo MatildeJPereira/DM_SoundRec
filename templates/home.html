@@ -6,11 +6,36 @@
 </head>
 <body>
 <div class="container mt-5">
-    <h1>Welcome</h1>
-    <p>I believe you want songs recommended, here:</p>
-    {% for one_rec in rec_mp3 %}
-    <audio controls><source src="{{ one_rec }}" type="audio/mpeg"></audio>
-    {% endfor %}
+    <h1>Song Recommendation System</h1>
+    <h2>Data Mining Exam - Matilde Pereira</h2>
+    <form id="form">
+        <label for="songs">Choose a song:</label>
+        <select id="songs" name="songs">
+            {% for index, song in songs.iterrows() %}
+            <option value="{{ index }}" >{{ song['track_title'] }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <label for="clustering">Choose a clustering algorithm:</label>
+        <select id="clustering" name="clustering">
+            <option value="kmeans">K-Means</option>
+            <option value="dbscan">DBSCAN</option>
+            <option value="hierarchical">Hierarchical</option>
+        </select>
+        <br>
+        <input type="submit" value="Submit">
+    </form>
+
+    <audio controls><source src="{{ chosen_track }}" type="audio/mpeg"></audio>
+
+    <p>Your Recommendations:</p>
+    <div id="result">
+        <!--Here things the recommendation result is shown-->
+    </div>
+    <img src="{{ plot_path }}">
+
+    <script src="/static/script.js"></script>
+
 </div>
 </body>
 </html>
