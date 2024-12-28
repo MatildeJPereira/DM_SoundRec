@@ -3,34 +3,41 @@
 <head>
     <title>Home</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/styles.css" rel="stylesheet">
 </head>
 <body>
 <div class="container mt-5">
     <h1>Song Recommendation System</h1>
-    <h2>Data Mining Exam - Matilde Pereira</h2>
     <form id="form">
         <label for="songs">Choose a song:</label>
-        <select id="songs" name="songs">
+        <select class="form-control"  id="songs" name="songs">
+            <option selected="selected">Select track</option>
             {% for index, song in songs.iterrows() %}
-            <option value="{{ index }}" >{{ song['track_title'] }}</option>
+            <option value="{{ index }}" >{{ song['artist_name'] }} - {{ song['track_title'] }}</option>
             {% endfor %}
         </select>
         <br>
+        <div id="loading" style="display: none;" class="loader"></div>
+        <div id="audio">
+            <!--Here the selected song is shown-->
+        </div>
+
+        <br>
         <label for="clustering">Choose a clustering algorithm:</label>
-        <select id="clustering" name="clustering">
+        <select class="form-control" id="clustering" name="clustering">
             <option value="kmeans">K-Means</option>
             <option value="dbscan">DBSCAN</option>
             <option value="hierarchical">Hierarchical</option>
         </select>
         <br>
-        <input type="submit" value="Submit">
+        <input type="submit" value="Submit" class="btn btn-outline-primary">
     </form>
 
-    <audio controls><source src="{{ chosen_track }}" type="audio/mpeg"></audio>
+    <h2>Your Recommendations:</h2>
+    <div id="loading_two" style="display: none;" class="loader"></div>
 
-    <p>Your Recommendations:</p>
     <div id="result">
-        <!--Here things the recommendation result is shown-->
+        <!--Here the recommendation result is shown-->
     </div>
     <img src="{{ plot_path }}">
 

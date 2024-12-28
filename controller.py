@@ -105,12 +105,25 @@ def home():
                            # plot_path=plot_path)
 
 
+def update_song():
+    data, tracks = load_data()
+    track_id = int(request.json.get('selectedSong'))
+
+    print("Getting chosen track")
+    chosen_track = tracks[tracks.index == track_id]
+    chosen_track_url = chosen_track['track_url'].get(track_id)
+    chosen_track_mp3 = __get_track_mp3(chosen_track_url)
+    print("Chosen track done!")
+
+    return jsonify(chosen_track_mp3)
+
+
 def process():
     data, tracks = load_data()
     track_id = int(request.json.get('song'))
     selected_algorithm = request.json.get('algorithm')
-    print("track id:", track_id)
-    print("algorithm:", selected_algorithm)
+    # print("track id:", track_id)
+    # print("algorithm:", selected_algorithm)
 
     # TODO this is all wrong
     # for k-means:
@@ -137,25 +150,22 @@ def process():
     rec = __recommend(track_id, data)
 
     rec_tracks = tracks[tracks.index.isin(rec.index)]
-    rec_tracks_url = rec_tracks['track_url'].tolist()
+    rec_tracks_info = rec_tracks[['artist_name', 'track_title', 'track_url']]
+    rec_tracks_url = rec_tracks_info['track_url'].tolist()
     print("Recommendation finished")
 
-    print("Getting chosen track")
-    chosen_track = tracks[tracks.index == track_id]
-    chosen_track_url = chosen_track['track_url'].get(track_id)
-    chosen_track_mp3 = __get_track_mp3(chosen_track_url)
-    print("Chosen track done")
-
-    print("Get Mp3 for recommended tracks")
-    # this takes a long time, but it's prettier this way
+    print("Getting Mp3 for recommended tracks, this can take some time")
     rec_tracks_url_mp3 = []
     for track in rec_tracks_url:
         track_mp3 = __get_track_mp3(track)
         rec_tracks_url_mp3.append(track_mp3)
+    rec_tracks_info['track_url'] = rec_tracks_url_mp3
+    rec_tracks_json = rec_tracks_info.to_dict(orient="index")
+    print(rec_tracks_json)
 
     plot_path = clustering.show()
 
-    return jsonify(rec_tracks_url_mp3)
+    return rec_tracks_json
 
 
 def __recommend(track_id, data):
@@ -172,7 +182,7 @@ def __recommend(track_id, data):
 def __get_track_mp3(track_url):
     """
     Private Method that parses the FMA website for the song in question
-    This way it's possible to play the mp3 on my website
+    This way it's possible to play the mp3 on the website
     :param track_url: the url of the track
     :return: if the FMA url exists, returns the mp3 url
     """
