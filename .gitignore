@@ -1,1 +1,9 @@
 fma_metadata/
+static/clustering
+static/clustering (2).csv
+static/clustering (3).csv
+static/clustering.csv
+Makefile
+make.bat
+conf.py
+index.rst

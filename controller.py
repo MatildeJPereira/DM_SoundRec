@@ -1,39 +1,50 @@
 import json
-
 from flask import render_template, request, jsonify
 from matplotlib import pyplot as plt
-
+import matplotlib
 from models.clustering import Clustering
 from models.metrics import Metrics
 from models.recommendation import Recommendation
+from models.cosine_similarity import CosineSimilarity
+import numpy as np
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from sklearn.preprocessing import StandardScaler
+matplotlib.use('Agg')
+
+# cache for storing the data, so it doesn't have to load multiple times
+cached_data = None
 
 
 def load_data():
-    # load the echonest data taking into account the multi-level headers, the track_id is the index
-    data = pd.read_csv("fma_metadata/raw_echonest.csv", header=[0, 1, 2], index_col=0)
-    selected_data = data.loc[:, data.columns.get_level_values(level=2).isin([
-        "acousticness", "danceability", "energy", "instrumentalness", "liveness", "speechiness", "tempo", "valence"])]
+    global cached_data
+    # check if data is already loaded and cached
+    if cached_data is None:
+        print("Loading data")
+        # load the echonest data taking into account the multi-level headers, the track_id is the index
+        data = pd.read_csv("fma_metadata/raw_echonest.csv", header=[0, 1, 2], index_col=0)
+        selected_data = data.loc[:, data.columns.get_level_values(level=2).isin([
+            "acousticness", "danceability", "energy", "instrumentalness", "liveness", "speechiness", "tempo", "valence"])]
 
-    selected_data = selected_data.dropna()
+        selected_data = selected_data.dropna()
 
-    # load raw tracks data, the track_id is the index
-    tracks = pd.read_csv('fma_metadata/raw_tracks.csv', header=[0], index_col=0)
+        # load raw tracks data, the track_id is the index
+        tracks = pd.read_csv('fma_metadata/raw_tracks.csv', header=[0], index_col=0)
 
-    # choose just the tracks that are in echonest
-    ids_in_data = selected_data.index
-    filtered_tracks = tracks[tracks.index.isin(ids_in_data)]
+        # choose just the tracks that are in echonest
+        ids_in_data = selected_data.index
+        filtered_tracks = tracks[tracks.index.isin(ids_in_data)]
 
-    # TODO Join the two tables?
-    # scale the data
-    scaler = StandardScaler()
-    scaled_data = scaler.fit_transform(selected_data)
-    scaled_data_df = pd.DataFrame(scaled_data, index=selected_data.index, columns=selected_data.columns)
+        # scale the data
+        scaler = StandardScaler()
+        scaled_data = scaler.fit_transform(selected_data)
+        scaled_data_df = pd.DataFrame(scaled_data, index=selected_data.index, columns=selected_data.columns)
 
-    return scaled_data_df, filtered_tracks
+        cached_data = scaled_data_df, filtered_tracks
+    else:
+        print("Using cached data")
+    return cached_data
 
 
 def home():
@@ -41,59 +52,6 @@ def home():
     Home Controller
     :return: Renders the template for the home page with the needed variables
     """
-    # clustering = 'kmeans'
-    # if request.method == 'POST':
-    #     clustering = request.form['clustering']
-    #
-    # data, tracks = load_data()
-    # track_id = 2
-    #
-    # # get all tracks names
-    # songs_names = tracks['track_title'].tolist()
-    #
-    # # TODO this is all wrong
-    # # for k-means:
-    # # k=8 -> By the inertia elbow method, but SS: ~0.15824811473835565
-    # # k=8 -> SS: ~0.15824811473835565
-    #
-    # # for dbscan:
-    # # k=5 -> By the inertia elbow method, SS: ~0.4563707621732127
-    # clustering = Clustering(data, clustering, 8)
-    # data = clustering.clustering_alg()
-    #
-    # # Initialize the metrics
-    # metrics = Metrics(data)
-    # # Cluster Cohesion Metric by Silhouette Score
-    # metrics.cluster_cohesion()
-    # metrics.davies_bouldin()
-    #
-    # # TODO Remove, Temporary to make a silhouette analysis and get the best number for k
-    # # __get_silhouette_analysis(data)
-    # # metrics.inertia()
-    #
-    # # data.to_csv('static/new_data.csv', sep=',')
-    # print("Loading recommendation")
-    # rec = __recommend(track_id, data)
-    #
-    # rec_tracks = tracks[tracks.index.isin(rec.index)]
-    # rec_tracks_url = rec_tracks['track_url'].tolist()
-    # print("Recommendation finished")
-    #
-    # print("Getting chosen track")
-    # chosen_track = tracks[tracks.index == track_id]
-    # chosen_track_url = chosen_track['track_url'].get(track_id)
-    # chosen_track_mp3 = __get_track_mp3(chosen_track_url)
-    # print("Chosen track done")
-    #
-    # print("Get Mp3 for recommended tracks")
-    # # this takes a long time, but it's prettier this way
-    # rec_tracks_url_mp3 = []
-    # for track in rec_tracks_url:
-    #     track_mp3 = __get_track_mp3(track)
-    #     rec_tracks_url_mp3.append(track_mp3)
-    #
-    # plot_path = clustering.show()
-
     data, tracks = load_data()
     songs = tracks['track_title']
 
@@ -122,35 +80,61 @@ def process():
     data, tracks = load_data()
     track_id = int(request.json.get('song'))
     selected_algorithm = request.json.get('algorithm')
-    # print("track id:", track_id)
-    # print("algorithm:", selected_algorithm)
 
-    # TODO this is all wrong
-    # for k-means:
-    # k=8 -> By the inertia elbow method, but SS: ~0.15824811473835565
-    # k=8 -> SS: ~0.15824811473835565
+    # TODO inertia elbow method for each clustering algorithm
+    print("Clustering... (", selected_algorithm, ")")
+    # for i in range(50, 130):
+    #     data_for = data
+    #     i = i/100
+    #     clustering = Clustering(data_for, selected_algorithm, 8, i)
+    #     data_for = clustering.clustering_alg()
+    #
+    #     print("Number of clusters:", len(data_for['cluster'].unique()))
+    #     # Initialize the metrics
+    #     metrics = Metrics(data_for)
+    #     # Cluster Cohesion Metric by Silhouette Score
+    #     metrics.cluster_cohesion()
+    #     metrics.davies_bouldin()
+    #     print("***********************\n")
 
-    # for dbscan:
-    # k=5 -> By the inertia elbow method, SS: ~0.4563707621732127
-    clustering = Clustering(data, selected_algorithm, 8)
+    clustering = Clustering(data, selected_algorithm, 8, 0.65)
     data = clustering.clustering_alg()
 
-    # # Initialize the metrics
-    # metrics = Metrics(data)
-    # # Cluster Cohesion Metric by Silhouette Score
-    # metrics.cluster_cohesion()
-    # metrics.davies_bouldin()
+    # print("Clustering Finished, number of clusters: ", )
+    data.to_csv("./static/clustering")
+
+    # Initialize the metrics
+    metrics = Metrics(data)
+    # Cluster Cohesion Metric by Silhouette Score
+    metrics.cluster_cohesion()
+    metrics.davies_bouldin()
 
     # TODO Remove, Temporary to make a silhouette analysis and get the best number for k
     # __get_silhouette_analysis(data)
     # metrics.inertia()
 
-    # data.to_csv('static/new_data.csv', sep=',')
+    # get all tracks of the same cluster
+    similarity = CosineSimilarity()
+    find_cluster = data.loc[data.index == track_id, 'cluster'].values[0]
+    cluster_tracks = data[data["cluster"] == find_cluster]
+
+    track_features = cluster_tracks.loc[track_id].drop(['cluster']).values
+    cluster_features = cluster_tracks.drop(['cluster'], axis=1).values
+
+    similarities = similarity.calculate(cluster_features, track_features)
+
+    # sort
+    similar_indices = cluster_tracks.index[np.argsort(similarities)[::-1]]
+    rec = cluster_tracks.loc[similar_indices]
+    rec = rec[rec.index != track_id].head(5)  # Exclude the input track and get top-N recommendations
+    print(rec)
+
+    # Recommendation
     print("Loading recommendation")
-    rec = __recommend(track_id, data)
+    # rec = __recommend(track_id, data)
 
     rec_tracks = tracks[tracks.index.isin(rec.index)]
-    rec_tracks_info = rec_tracks[['artist_name', 'track_title', 'track_url']]
+    rec_tracks_info = rec_tracks[['artist_name', 'track_title', 'track_url']].copy()
     rec_tracks_url = rec_tracks_info['track_url'].tolist()
     print("Recommendation finished")
 
@@ -161,7 +145,7 @@ def process():
         rec_tracks_url_mp3.append(track_mp3)
     rec_tracks_info['track_url'] = rec_tracks_url_mp3
     rec_tracks_json = rec_tracks_info.to_dict(orient="index")
-    print(rec_tracks_json)
+    print("Mp3's Done!")
 
     plot_path = clustering.show()
 

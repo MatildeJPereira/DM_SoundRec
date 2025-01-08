@@ -22,7 +22,7 @@ class Metrics:
     def davies_bouldin(self):
         values_without_cluster = self.data.iloc[:, :-1].values
         dbi = davies_bouldin_score(values_without_cluster, self.data['cluster'])
-        print(values_without_cluster)
+        # print(values_without_cluster)
         print("Davies Bouldin Index:", dbi)
 
     def inertia(self):
