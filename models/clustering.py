@@ -1,5 +1,3 @@
-import statistics
-
 import pandas as pd
 from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
 from sklearn.decomposition import PCA
@@ -13,15 +11,12 @@ def __find_eps(data, k):
     """
     Determines the optimal epsilon (eps) value for DBSCAN using the k-distance graph.
 
-    :param data:
-        The dataset to analyze.
+    :param data: The dataset to analyze.
     :type data: :class:`pd.DataFrame`
-    :param k:
-        The number of nearest neighbors to consider (equivalent to min_pts).
+    :param k: The number of nearest neighbors to consider (equivalent to min_pts).
     :type k: :class:`int`
 
-    :return:
-        None. Shows the plot for visual inspection.
+    :return: None. Shows the plot for visual inspection.
     """
     # Compute the k-nearest neighbors
     neighbors = NearestNeighbors(n_neighbors=k)
@@ -57,12 +52,10 @@ def __dendogram(data):
     """
     Generates a dendrogram for Hierarchical clustering.
 
-    :param data:
-        The dataset for which the dendrogram will be created.
+    :param data: The dataset for which the dendrogram will be created.
     :type data: :class:`pd.DataFrame`
 
-    :return:
-        None. Displays the dendrogram plot.
+    :return: None. Displays the dendrogram plot.
     """
     # Compute linkage matrix
     linkage_data = linkage(data, method="ward")
@@ -100,7 +93,7 @@ def update_distance_matrix(distance_matrix, cluster_a, cluster_b):
     """
     for i in range(len(distance_matrix)):
         if i != cluster_a and i != cluster_b:
-            # update distance of new merged cluster
+            # Update distance of new merged cluster
             distance_matrix[cluster_a][i] = distance_matrix[i][cluster_a] = min(
                 distance_matrix[cluster_a][i], distance_matrix[cluster_b][i]
             )
@@ -112,35 +105,30 @@ def update_distance_matrix(distance_matrix, cluster_a, cluster_b):
 
 class Clustering:
     """
-    Class that creates the chosen clustering algorithm.
+    Class to perform clustering using different clustering algorithms.
+
+    This class allows the user to choose between multiple clustering algorithms (K-Means, DBSCAN, Hierarchical),
+    and perform clustering on a given dataset.
 
     :Attributes:
-        - **data** (:class:`pd.DataFrame`):
-          The data from the chosen dataset.
-        - **clustering_type** (:class:`str`):
-          The clustering type that has been chosen ('kmeans', 'dbscan', 'hierarchical').
-        - **n_clusters** (:class:`int`):
-          The number of clusters for K-Means and hierarchical clustering.
-        - **eps** (:class:`float`):
-          The epsilon value for DBSCAN.
+        - **data** (:class:`pd.DataFrame`): The data from the chosen dataset.
+        - **clustering_type** (:class:`str`): The clustering type that has been chosen ('kmeans', 'dbscan', 'hierarchical').
+        - **n_clusters** (:class:`int`): The number of clusters for K-Means and hierarchical clustering.
+        - **eps** (:class:`float`): The epsilon value for DBSCAN.
     """
 
     def __init__(self, data, clustering_type, n_clusters, eps):
         """
         Initializes the Clustering object with dataset, algorithm type, and parameters.
 
-        :param data:
-            The dataset to be used for clustering.
+        :param data:The dataset to be used for clustering.
         :type data: :class:`pd.DataFrame`
-        :param clustering_type:
-            The type of clustering algorithm to apply. Can be one of:
-            `'kmeans'`, `'dbscan'`, `'hierarchical'`.
+        :param clustering_type: The type of clustering algorithm to apply.
+        Can be one of:`'kmeans'`, `'dbscan'`, `'hierarchical'`.
         :type clustering_type: :class:`str`
-        :param n_clusters:
-            Number of clusters to form for K-Means and hierarchical clustering.
+        :param n_clusters: Number of clusters to form for K-Means and hierarchical clustering.
         :type n_clusters: :class:`int`
-        :param eps:
-            Epsilon parameter for DBSCAN. Defines neighborhood size.
+        :param eps: Epsilon parameter for DBSCAN. Defines neighborhood size.
         :type eps: :class:`float`
         """
         self.data = data
@@ -150,28 +138,25 @@ class Clustering:
 
     def clustering_alg(self):
         """
-        Entry point for executing the chosen clustering algorithm.
+        Execute the chosen clustering algorithm.
 
-        :return:
-            Data with an additional 'cluster' column containing cluster assignments.
+        :return: Data with an additional 'cluster' column containing cluster assignments.
         :rtype: :class:`pd.DataFrame`
         """
         if self.type == 'kmeans':
-            return self.__my_kmeans()
+            return self.__k_means()
         if self.type == 'dbscan':
-            return self.__my_dbscan()
+            return self.__db_scan()
         if self.type == 'hierarchical':
-            return self.__my_hierarchical()
+            return self.__hierarchical()
 
     def __k_means(self):
         """
-        Implements the K-Means clustering algorithm.
+        K-Means clustering implementation.
 
-        :return:
-            Data with an additional 'cluster' column for cluster assignments.
+        :return: Data with an additional 'cluster' column for cluster assignments.
         :rtype: :class:`pd.DataFrame`
         """
-        # Create and fit the K-Means model
         kmeans = KMeans(n_clusters=self.n_clusters, random_state=42)
         self.data['cluster'] = kmeans.fit_predict(self.data)
         return self.data
@@ -180,8 +165,7 @@ class Clustering:
         """
         Handmade implementation of K-Means
 
-        :return:
-            Data with additional 'cluster' column for cluster assigments.
+        :return: Data with additional 'cluster' column for cluster assigments.
         :rtype: :class:`pd.DataFrame`
         """
         # Initialize centroids randomly from the data points
@@ -220,22 +204,19 @@ class Clustering:
 
     def __db_scan(self):
         """
-        TODO verify
-        TODO __find_eps gives 2.2, trying 0.65, verify more
-        Implements the DBSCAN clustering algorithm.
+        DBSCAN clustering implementation.
 
-        :return:
-            Data with an additional 'cluster' column for cluster assignments.
+        :return: Data with an additional 'cluster' column for cluster assignments.
         :rtype: :class:`pd.DataFrame`
         """
-        # Determinge a min_pts (minimum samples) for DBSCAN
+        # Setting min_pts for DBSCAN
         min_pts = self.data.shape[1] * 2
         print("DBSCAN min_pts: ", min_pts)
 
-        # Find a suitable eps
+        # # Find a suitable eps
         # self.__find_eps(self.data, min_pts)
 
-        # Apply the DBSCAN algorithm with specified eps and min_samples
+        # Apply the DBSCAN algorithm
         dbscan = DBSCAN(eps=self.eps, min_samples=min_pts)
         self.data['cluster'] = dbscan.fit_predict(self.data)
         return self.data
@@ -244,8 +225,7 @@ class Clustering:
         """
         Handmade implementation of the DBSCAN clustering algorithm.
 
-        :return:
-            Data with an additional 'cluster' column for cluster assignments.
+        :return: Data with an additional 'cluster' column for cluster assignments.
         :rtype: :class:`pd.DataFrame`
         """
         # Determining a min_pts (minimum samples)
@@ -302,28 +282,25 @@ class Clustering:
 
     def __hierarchical(self):
         """
-        Implements the Hierarchical clustering algorithm.
+        Hierarchical clustering implementation.
 
-        :return:
-            Data with an additional 'cluster' column for cluster assignments.
+        :return: Data with an additional 'cluster' column for cluster assignments.
         :rtype: :class:`pd.DataFrame`
         """
-        # Make a dendogram
+        # # Make a dendogram
         # self.__dendogram(self.data)
-        # Dendogram Result: number of clusters 5
+        # # Dendogram Result: number of clusters 5
 
-        # Apply Agglomerative Clustering with the Ward linkage method
+        # Use Agglomerative Clustering (Ward linkage method)
         hierarchical_cluster = AgglomerativeClustering(n_clusters=5, linkage='ward')
         self.data['cluster'] = hierarchical_cluster.fit_predict(self.data)
-
         return self.data
 
     def __my_hierarchical(self):
         """
         Handmade implementation of Hierarchical Clustering.
 
-        :return:
-            Data with additional 'cluster' column for cluster assignments.
+        :return: Data with additional 'cluster' column for cluster assignments.
         :rtype: :class:`pd.DataFrame`
         """
 
@@ -369,16 +346,12 @@ class Clustering:
 
     def show(self):
         """
-        Visualizes the clustered data using PCA to reduce dimensions.
+        Visualize the clustered data using PCA for dimensionality reduction.
 
-        :return:
-            The file path of the saved scatter plot.
+        :return: The file path of the saved scatter plot.
         :rtype: :class:`str`
         """
-        # Clear any previous plots
-        plt.clf()
-
-        # Apply PCA for dimensionality reduction
+        # Apply PCA
         pca = PCA(n_components=2)
         reduced_data = pca.fit_transform(self.data)
 
@@ -389,7 +362,7 @@ class Clustering:
         plt.ylabel('Principal Component 2')
         plt.grid(True)
 
-        # Save the plot to a file
+        # Save the plot
         plot_path = 'static/clustering_plot.png'
         plt.savefig(plot_path)
         plt.close()

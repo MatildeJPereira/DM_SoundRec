@@ -6,13 +6,28 @@ from sklearn.metrics import davies_bouldin_score
 
 # TODO Add metrics here
 class Metrics:
+    """
+    A class for evaluating clustering performance using various metrics.
+
+    :Attributes:
+        - **data** (:class:`pd.DataFrame`): The dataset, including features and cluster assignments.
+    """
+
     def __init__(self, data):
+        """
+        Initializes the Metrics object with the dataset that contains clustering results.
+
+        :param data: The dataset that contains both the features and the cluster assignments.
+        :type data: :class:`pd.DataFrame`
+        """
         self.data = data
 
     def cluster_cohesion(self):
         """
-        Silhouette Score of the clustering done
-        :return: the Silhouette Score
+        Calculates the Silhouette Score for the current clustering.
+
+        :return: The Silhouette Score of the clustering.
+        :rtype: :class:`float`
         """
         values_without_cluster = self.data.iloc[:, :-1].values
         score = silhouette_score(values_without_cluster, self.data['cluster'])
@@ -20,12 +35,23 @@ class Metrics:
         return score
 
     def davies_bouldin(self):
+        """
+        Calculates the Davies-Bouldin Index for the clustering.
+
+        :return: The Davies-Bouldin Index.
+        :rtype: :class:`float`
+        """
         values_without_cluster = self.data.iloc[:, :-1].values
         dbi = davies_bouldin_score(values_without_cluster, self.data['cluster'])
-        # print(values_without_cluster)
         print("Davies Bouldin Index:", dbi)
+        return dbi
 
     def inertia(self):
+        """
+        Applies the Elbow Method to determine the optimal number of clusters.
+
+        :return: None, but plots an elbow graph to visualize the inertia change with respect to the number of clusters.
+        """
         df_without_cluster = self.data.iloc[:, :-1]
 
         wcss = []
